@@ -1,45 +1,69 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
-```{r GlobalOptions}
+# Reproducible Research: Peer Assessment 1
+
+```r
 ##Setting global options
 library(knitr)
 opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE,
                root.dir='D:/Git/repository/RepData_PeerAssessment1/')
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(ggplot2)
 ```
 
 ## Loading and preprocessing the data
-```{r LoadData}
+
+```r
 df<-read.csv('activity/activity.csv')
 df$date<-as.Date(df$date) #change to Date format
 ```
 
 ## What is mean total number of steps taken per day?
-```{r Steps}
+
+```r
 daily_steps<-df%>%group_by(date)%>%summarise(daily_tot = sum(steps))
 ggplot(daily_steps, aes(daily_tot))+geom_histogram()
 ```
 
-The mean total number of steps taken per day is `r format(mean(daily_steps$daily_tot, na.rm = T), scientific=F)` steps.
-And the median number of steps taken per day is `r median(daily_steps$daily_tot, na.rm = T)` steps.
+![](PA1_template_files/figure-html/Steps-1.png)<!-- -->
+
+The mean total number of steps taken per day is 10766.19 steps.
+And the median number of steps taken per day is 10765 steps.
 
 ## What is the average daily activity pattern?
-```{r avg_interval}
+
+```r
 avg_int <- df%>%group_by(interval)%>%summarise(avg_steps=mean(steps, na.rm= T))
 ggplot(avg_int, aes(interval, avg_steps))+geom_line()
 ```
 
-On average across all the days in the dataset, interval `r avg_int$interval[which(avg_int$avg_steps==max(avg_int$avg_steps))]` contains the maximum number of steps.
+![](PA1_template_files/figure-html/avg_interval-1.png)<!-- -->
+
+On average across all the days in the dataset, interval 835 contains the maximum number of steps.
 
 ## Imputing missing values
 
-The total number of missing values in the dataset is `r length(which(is.na(df$steps)))`.
-```{r missing_value}
+The total number of missing values in the dataset is 2304.
+
+```r
 #use the averaged steps for each interval to fill NA values
 avg_int$round_steps<-round(avg_int$avg_steps)
 df_complete<-merge(df, avg_int, by.x = 'interval', by.y = 'interval')
@@ -54,12 +78,15 @@ daily_steps_comp<-df_complete%>%group_by(date)%>%summarise(daily_tot = sum(comp_
 ggplot(daily_steps_comp, aes(daily_tot))+geom_histogram()
 ```
 
-After filling the missing values, the mean total number of steps taken per day is `r format(mean(daily_steps_comp$daily_tot, na.rm = T), scientific=F)` steps.
-And the median number of steps taken per day is `r format(median(daily_steps_comp$daily_tot, na.rm = T), scientific=F)` steps.
+![](PA1_template_files/figure-html/missing_value-1.png)<!-- -->
+
+After filling the missing values, the mean total number of steps taken per day is 10765.64 steps.
+And the median number of steps taken per day is 10762 steps.
 The estimates are slightly lower than before.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r diff}
+
+```r
 df_complete$weekday<-weekdays(df_complete$date)
 df_complete$day<-c(rep(NA,nrow(df_complete)))
 for (i in (1:nrow(df_complete))){
@@ -69,3 +96,5 @@ for (i in (1:nrow(df_complete))){
 df_day<-df_complete%>%group_by(interval, day)%>%summarise(avg_steps=mean(comp_steps, na.rm= T))
 ggplot(df_day, aes(interval, avg_steps))+geom_line()+facet_grid(day~.)
 ```
+
+![](PA1_template_files/figure-html/diff-1.png)<!-- -->
